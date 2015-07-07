@@ -2,9 +2,10 @@
 
 namespace GildedRose.Console
 {
-    class Program
+    public class Program
     {
-        IList<Item> Items;
+
+        public IList<Item> Items;
         static void Main(string[] args)
         {
             System.Console.WriteLine("OMGHAI!");
@@ -36,89 +37,170 @@ namespace GildedRose.Console
 
         public void UpdateQuality()
         {
-            for (var i = 0; i < Items.Count; i++)
+            foreach (Item item in Items)
             {
-                if (Items[i].Name != "Aged Brie" && Items[i].Name != "Backstage passes to a TAFKAL80ETC concert")
+                int sellIn = item.SellIn;
+                int quality = item.Quality;
+
+                if (item.Name.Contains("Sulfuras"))
                 {
-                    if (Items[i].Quality > 0)
+                    item.Quality = UpdateLegendaryItem(quality);
+                }
+                else 
+                {
+                    item.SellIn = sellIn--;
+                    if (item.Name == "Aged Brie")
                     {
-                        if (Items[i].Name != "Sulfuras, Hand of Ragnaros")
-                        {
-                            Items[i].Quality = Items[i].Quality - 1;
-                        }
+                        item.Quality = UpdateAgedItem(sellIn, quality);
                     }
-                }
-                else
-                {
-                    if (Items[i].Quality < 50)
+                    else if (item.Name.Contains("Backstage passes"))
                     {
-                        Items[i].Quality = Items[i].Quality + 1;
-
-                        if (Items[i].Name == "Backstage passes to a TAFKAL80ETC concert")
-                        {
-                            if (Items[i].SellIn < 11)
-                            {
-                                if (Items[i].Quality < 50)
-                                {
-                                    Items[i].Quality = Items[i].Quality + 1;
-                                }
-                            }
-
-                            if (Items[i].SellIn < 6)
-                            {
-                                if (Items[i].Quality < 50)
-                                {
-                                    Items[i].Quality = Items[i].Quality + 1;
-                                }
-                            }
-                        }
+                        item.Quality = UpdateBackstagePassItem(sellIn, quality);
                     }
-                }
-
-                if (Items[i].Name != "Sulfuras, Hand of Ragnaros")
-                {
-                    Items[i].SellIn = Items[i].SellIn - 1;
-                }
-
-                if (Items[i].SellIn < 0)
-                {
-                    if (Items[i].Name != "Aged Brie")
+                    else if (item.Name.Contains("Conjured"))
                     {
-                        if (Items[i].Name != "Backstage passes to a TAFKAL80ETC concert")
-                        {
-                            if (Items[i].Quality > 0)
-                            {
-                                if (Items[i].Name != "Sulfuras, Hand of Ragnaros")
-                                {
-                                    Items[i].Quality = Items[i].Quality - 1;
-                                }
-                            }
-                        }
-                        else
-                        {
-                            Items[i].Quality = Items[i].Quality - Items[i].Quality;
-                        }
+                        item.Quality = UpdateConjuredItem(sellIn, quality);
                     }
                     else
                     {
-                        if (Items[i].Quality < 50)
-                        {
-                            Items[i].Quality = Items[i].Quality + 1;
-                        }
+                        item.Quality = UpdateRegularItem(sellIn, quality);
                     }
                 }
+                
+
             }
+
+        }
+
+        public bool IsPastSellIn(int sellIn)
+        {
+            if(sellIn < 0)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+            
+        }
+
+        public bool IsHighestQuality(int quality)
+        {
+            if(quality >= 50)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        public bool IsLowestQuality(int quality)
+        {
+            if(quality == 0)
+            {
+                return true;
+            }
+            else 
+            {
+                return false;
+            }
+        }
+
+        public int UpdateRegularItem(int sellIn, int quality)
+        {
+            if(!IsLowestQuality(quality))
+            {
+                if (sellIn < 0)
+                {
+                    quality = quality - 2;
+                }
+                else
+                {
+                    quality = quality - 1;
+                }
+            }
+
+            if (quality < 0)
+            {
+                quality = 0;
+            }
+
+            return quality;
+        }
+
+        public int UpdateLegendaryItem(int quality)
+        {
+            return quality;
+        }
+
+        public int UpdateConjuredItem(int sellIn, int quality)
+        {
+            int qualityDegrade = 2;
+
+            if (!IsLowestQuality(quality))
+            {
+                if (IsPastSellIn(sellIn))
+                {
+                    qualityDegrade = qualityDegrade * 2;
+                }
+                quality = quality - qualityDegrade;
+                if(quality < 0)
+                {
+                    quality = 0;
+                }
+            }
+            
+          
+            return quality;
+        }
+
+        public int UpdateBackstagePassItem(int sellIn, int quality)
+        {
+            if(sellIn < 0)
+            {
+                quality = 0;
+            }
+            else if(!IsHighestQuality(quality))
+            {
+                if (sellIn < 6)
+                {
+                    quality = quality + 3;
+                }
+                else if (sellIn < 11)
+                {
+                    quality = quality + 2;
+                }
+            }
+            if(quality > 50)
+            {
+                quality = 50;
+            }
+            return quality;
+        }
+
+        public int UpdateAgedItem(int sellIn, int quality)
+        {
+            if (!IsHighestQuality(quality))
+            {
+                quality++;
+            }
+            return quality;
+        }
+
+}
+
+
+        public class Item
+        {
+            public string Name { get; set; }
+
+            public int SellIn { get; set; }
+
+            public int Quality { get; set; }
         }
 
     }
 
-    public class Item
-    {
-        public string Name { get; set; }
-
-        public int SellIn { get; set; }
-
-        public int Quality { get; set; }
-    }
-
-}
